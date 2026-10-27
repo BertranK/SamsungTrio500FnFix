@@ -1,0 +1,17 @@
+[package]
+name = "trio500-fnfix"
+version = "0.1.0"
+edition = "2021"
+description = "Makes the Samsung Smart Keyboard Trio 500 top row act as F1-F12 on Windows without holding Fn"
+repository = "https://github.com/BertranK/SamsungTrio500FnFix"
+
+[[bin]]
+name = "Trio500FnFix"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
