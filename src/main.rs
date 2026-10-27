@@ -3,7 +3,7 @@
 // Without Fn the keyboard sends HID consumer-control usages for F1-F6 and F10-F12 (captured with
 // tools/trio500-keylog.ps1). This tray app listens for those reports through Raw Input and injects the
 // matching F-key. F7-F9 are the keyboard's Bluetooth slot keys and send nothing to the PC without Fn.
-// Tray menu: Pause, Run at Windows startup (HKCU\...\CurrentVersion\Run), Exit.
+// Tray menu: Pause, Run at Windows startup (HKCU\...\CurrentVersion\Run, on by default), Exit.
 //
 // Build: cargo build --release   (no external crates; the Win32 API is declared by hand below)
 #![windows_subsystem = "windows"]
@@ -79,7 +79,9 @@ const DT_SINGLELINE: u32 = 0x20;
 const ERROR_ALREADY_EXISTS: u32 = 183;
 const HKEY_CURRENT_USER: isize = 0x8000_0001u32 as i32 as isize;
 const RRF_RT_REG_SZ: u32 = 0x0002;
+const RRF_RT_REG_DWORD: u32 = 0x0010;
 const REG_SZ: u32 = 1;
+const REG_DWORD: u32 = 4;
 
 #[repr(C)]
 struct WNDCLASSEXW {
@@ -506,6 +508,8 @@ unsafe extern "system" fn keyboard_hook(code: i32, wparam: usize, lparam: isize)
 
 const RUN_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Run";
 const RUN_VALUE: &str = "Trio500FnFix";
+const APP_KEY: &str = r"Software\Trio500FnFix";
+const FIRST_RUN_VALUE: &str = "FirstRunDone";
 
 fn startup_command() -> Option<String> {
     std::env::current_exe().ok().map(|path| format!("\"{}\"", path.display()))
@@ -535,6 +539,23 @@ unsafe fn set_startup(enable: bool) {
     } else {
         RegDeleteKeyValueW(HKEY_CURRENT_USER, key.as_ptr(), value.as_ptr());
     }
+}
+
+// Startup is on by default: the first run registers it, and later runs leave the user's choice alone.
+unsafe fn enable_startup_on_first_run() {
+    let key = wide(APP_KEY);
+    let value = wide(FIRST_RUN_VALUE);
+    let mut done = 0u32;
+    let mut size = size_of::<u32>() as u32;
+    let status = RegGetValueW(HKEY_CURRENT_USER, key.as_ptr(), value.as_ptr(), RRF_RT_REG_DWORD, null_mut(),
+                              (&mut done as *mut u32).cast(), &mut size);
+    if status == 0 {
+        return;
+    }
+    set_startup(true);
+    done = 1;
+    RegSetKeyValueW(HKEY_CURRENT_USER, key.as_ptr(), value.as_ptr(), REG_DWORD, (&done as *const u32).cast(),
+                    size_of::<u32>() as u32);
 }
 
 // ---- Tray icon ----------------------------------------------------------------------------
@@ -707,6 +728,7 @@ fn main() {
         let rid = RAWINPUTDEVICE { usage_page: 0x0C, usage: 0x01, flags: RIDEV_INPUTSINK, hwnd_target: hwnd };
         RegisterRawInputDevices(&rid, 1, size_of::<RAWINPUTDEVICE>() as u32);
         let hook = SetWindowsHookExW(WH_KEYBOARD_LL, Some(keyboard_hook), instance, 0);
+        enable_startup_on_first_run();
 
         ICON.store(make_icon(), Relaxed);
         tray(hwnd, NIM_ADD, NIF_MESSAGE | NIF_ICON | NIF_TIP, true);

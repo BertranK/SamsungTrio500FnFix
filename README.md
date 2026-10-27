@@ -27,7 +27,7 @@ Fn을 누른 채로 누르면 원래대로 F1~F12가 나가므로, Fn을 누르�
 
 1. [Releases](https://github.com/BertranK/SamsungTrio500FnFix/releases)에서 `Trio500FnFix.exe`를 받습니다.
 2. 계속 둘 폴더(예: `%LOCALAPPDATA%\Programs\Trio500FnFix`)에 넣고 실행합니다.
-3. 트레이의 파란 **F1** 아이콘을 오른쪽 클릭해서 **Run at Windows startup**을 체크하면 로그인할 때마다 자동으로 실행됩니다.
+3. 처음 실행하면 **Run at Windows startup**이 자동으로 켜져서 로그인할 때마다 실행됩니다. 원하지 않으면 트레이의 파란 **F1** 아이콘을 오른쪽 클릭해서 체크를 푸세요. 한 번 푼 설정은 다시 켜지지 않습니다.
 
 서명되지 않은 exe라서 처음 실행할 때 SmartScreen이 "Windows의 PC 보호" 경고를 띄울 수 있습니다. **추가 정보 → 실행**을 누르면 됩니다. 소스에서 직접 빌드해도 됩니다(아래 참고).
 
@@ -36,7 +36,7 @@ Fn을 누른 채로 누르면 원래대로 F1~F12가 나가므로, Fn을 누르�
 | 메뉴 | 동작 |
 |---|---|
 | Pause | 잠시 끄기 (체크하면 원래 동작) |
-| Run at Windows startup | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`에 등록/해제 (관리자 권한 불필요) |
+| Run at Windows startup | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`에 등록/해제 (관리자 권한 불필요). 처음 실행할 때 자동으로 켜짐 |
 | Exit | 종료 |
 
 자동 실행 체크 표시는 등록된 경로가 지금 실행 중인 exe와 같을 때만 켜집니다. exe를 옮겼다면 새 위치에서 다시 체크하세요.
@@ -72,6 +72,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -STA -File .\tools\trio500-keylog.
 1. 트레이 메뉴에서 **Run at Windows startup** 체크를 풉니다.
 2. **Exit**로 종료합니다.
 3. exe 파일(폴더)을 지웁니다.
+4. (선택) 첫 실행 기록인 레지스트리 키 `HKCU\Software\Trio500FnFix`를 지웁니다.
 
 ---
 
@@ -81,7 +82,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -STA -File .\tools\trio500-keylog.
 
 **How it works.** Without Fn, the keyboard sends HID Consumer Control usages instead of F-keys (see the table above). This app listens through Raw Input, only for the Trio 500 (`VID 04E8 / PID A064`), and injects the matching F-key. Other keyboards are not affected.
 
-**Install.** Download `Trio500FnFix.exe` from [Releases](https://github.com/BertranK/SamsungTrio500FnFix/releases), put it in a permanent folder, and run it. Right-click the blue **F1** tray icon and check **Run at Windows startup** to start it at sign-in (stored under `HKCU\...\CurrentVersion\Run`, no admin needed). The exe is unsigned, so SmartScreen may warn on first run: choose *More info → Run anyway*.
+**Install.** Download `Trio500FnFix.exe` from [Releases](https://github.com/BertranK/SamsungTrio500FnFix/releases), put it in a permanent folder, and run it. The first run turns on **Run at Windows startup** (stored under `HKCU\...\CurrentVersion\Run`, no admin needed); to turn it off, right-click the blue **F1** tray icon and uncheck it. Once unchecked, it stays off. To uninstall, uncheck it, exit, delete the exe, and optionally delete `HKCU\Software\Trio500FnFix`. The exe is unsigned, so SmartScreen may warn on first run: choose *More info → Run anyway*.
 
 **Limitations.**
 - **F7–F9 still need Fn.** They are the Bluetooth slot keys, handled inside the keyboard, and send nothing to the PC without Fn.
