@@ -92,3 +92,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -STA -File .\tools\trio500-keylog.
 **Build.** `cargo build --release` with Rust stable (MSVC target). No external crates.
 
 **Diagnostics.** `tools/trio500-keylog.ps1` logs the raw signals from the keyboard and the key a window finally receives. If your keyboard sends different usages, update the `FKEY_SCAN` table in `src/main.rs`.
+
+## License
+
+[MIT](LICENSE)
